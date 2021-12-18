@@ -15,6 +15,7 @@ import {
   getDpmWeight,
   getProbabilityAfterBet,
 } from '../lib/calculation/contract'
+import { apiCall } from '../lib/firebase/api-call'
 
 export function BetPanel(props: { contract: Contract; className?: string }) {
   const { contract, className } = props
@@ -61,6 +62,7 @@ export function BetPanel(props: { contract: Contract; className?: string }) {
       amount: betAmount,
       outcome: betChoice,
       contractId: contract.id,
+      userId: user.id,
     }).then((r) => r.data as any)
 
     console.log('placed bet. Result:', result)
@@ -171,5 +173,9 @@ export function BetPanel(props: { contract: Contract; className?: string }) {
   )
 }
 
-const functions = getFunctions()
-export const placeBet = httpsCallable(functions, 'placeBet')
+// const functions = getFunctions()
+// export const placeBet = httpsCallable(functions, 'placeBet')
+export const placeBet = async (bet: any) => {
+  await apiCall({ ...bet, name: 'place-bet' })
+  return { data: { success: true } }
+}
