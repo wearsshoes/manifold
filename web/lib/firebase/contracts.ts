@@ -152,18 +152,6 @@ export function listenForContracts(
   return listenForValues<Contract>(q, setContracts)
 }
 
-export function listenForUserContracts(
-  creatorId: string,
-  setContracts: (contracts: Contract[]) => void
-) {
-  const q = query(
-    contracts,
-    where('creatorId', '==', creatorId),
-    orderBy('createdTime', 'desc')
-  )
-  return listenForValues<Contract>(q, setContracts)
-}
-
 export function getUserBetContracts(userId: string) {
   return getValues<Contract>(getUserBetContractsQuery(userId))
 }
@@ -175,37 +163,6 @@ export function getUserBetContractsQuery(userId: string) {
     where('uniqueBettorIds', 'array-contains', userId),
     limit(MAX_USER_BET_CONTRACTS_LOADED)
   ) as Query<Contract>
-}
-
-const inactiveContractsQuery = query(
-  contracts,
-  where('isResolved', '==', false),
-  where('closeTime', '>', Date.now()),
-  where('visibility', '==', 'public'),
-  where('volume24Hours', '==', 0)
-)
-
-export function getInactiveContracts() {
-  return getValues<Contract>(inactiveContractsQuery)
-}
-
-export function listenForInactiveContracts(
-  setContracts: (contracts: Contract[]) => void
-) {
-  return listenForValues<Contract>(inactiveContractsQuery, setContracts)
-}
-
-const newContractsQuery = query(
-  contracts,
-  where('isResolved', '==', false),
-  where('volume7Days', '==', 0),
-  where('createdTime', '>', Date.now() - 7 * DAY_MS)
-)
-
-export function listenForNewContracts(
-  setContracts: (contracts: Contract[]) => void
-) {
-  return listenForValues<Contract>(newContractsQuery, setContracts)
 }
 
 export function listenForLiveContracts(
@@ -250,26 +207,6 @@ export async function followContract(contractId: string, userId: string) {
 export async function unFollowContract(contractId: string, userId: string) {
   const followDoc = doc(collection(contracts, contractId, 'follows'), userId)
   await deleteDoc(followDoc)
-}
-
-const hotContractsQuery = query(
-  contracts,
-  where('isResolved', '==', false),
-  where('visibility', '==', 'public'),
-  orderBy('volume24Hours', 'desc'),
-  limit(16)
-)
-
-export function listenForHotContracts(
-  setHotContracts: (contracts: Contract[]) => void
-) {
-  return listenForValues<Contract>(hotContractsQuery, (contracts) => {
-    const hotContracts = sortBy(
-      chooseRandomSubset(contracts, 4),
-      (contract) => contract.volume24Hours
-    )
-    setHotContracts(hotContracts)
-  })
 }
 
 export const trendingContractsQuery = query(
