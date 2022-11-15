@@ -36,13 +36,21 @@ export function getCpmmProbabilityAfterBetBeforeFees(
   return getCpmmProbability({ YES: newY, NO: newN }, p)
 }
 
-export function getCpmmOutcomeProbabilityAfterBet(
+export function getCpmmProbabilityAfterBet(
   state: CpmmState,
-  outcome: string,
+  outcome: 'NO' | 'YES',
   bet: number
 ) {
   const { newPool } = calculateCpmmPurchase(state, bet, outcome)
-  const p = getCpmmProbability(newPool, state.p)
+  return getCpmmProbability(newPool, state.p)
+}
+
+function getCpmmOutcomeProbabilityAfterBet(
+  state: CpmmState,
+  outcome: 'NO' | 'YES',
+  bet: number
+) {
+  const p = getCpmmProbabilityAfterBet(state, outcome, bet)
   return outcome === 'NO' ? 1 - p : p
 }
 

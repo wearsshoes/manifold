@@ -1,4 +1,4 @@
-import { getOutcomeProbabilityAfterBet } from 'common/calculate'
+import { getProbabilityAfterBet } from 'common/calculate'
 import type { BinaryContract, Contract } from 'common/contract'
 import { formatMoney, formatPercent } from 'common/util/format'
 import { richTextToString } from 'common/util/parse'
@@ -226,12 +226,9 @@ function Percent(props: {
   outcome?: 'NO' | 'YES'
 }) {
   const { contract, amount, outcome } = props
-  const percent =
-    outcome === 'NO'
-      ? 1 - getOutcomeProbabilityAfterBet(contract, 'NO', amount)
-      : outcome === 'YES'
-      ? getOutcomeProbabilityAfterBet(contract, 'YES', amount)
-      : getBinaryProb(contract)
+  const percent = outcome
+    ? getProbabilityAfterBet(contract, outcome, amount)
+    : getBinaryProb(contract)
 
   return (
     <div

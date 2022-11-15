@@ -2,9 +2,9 @@ import { maxBy, partition, sortBy, sum, sumBy } from 'lodash'
 import { Bet, LimitBet } from './bet'
 import {
   getCpmmProbability,
-  getCpmmOutcomeProbabilityAfterBet,
   getCpmmProbabilityAfterSale,
   calculateCpmmSharesAfterFee,
+  getCpmmProbabilityAfterBet,
 } from './calculate-cpmm'
 import {
   calculateDpmPayout,
@@ -53,13 +53,13 @@ export function getOutcomeProbability(contract: Contract, outcome: string) {
     : getDpmOutcomeProbability(contract.totalShares, outcome)
 }
 
-export function getOutcomeProbabilityAfterBet(
-  contract: Contract,
-  outcome: string,
+export function getProbabilityAfterBet(
+  contract: BinaryContract | PseudoNumericContract,
+  outcome: 'NO' | 'YES',
   bet: number
 ) {
   return contract.mechanism === 'cpmm-1'
-    ? getCpmmOutcomeProbabilityAfterBet(contract, outcome, bet)
+    ? getCpmmProbabilityAfterBet(contract, outcome, bet)
     : getDpmOutcomeProbabilityAfterBet(contract.totalShares, outcome, bet)
 }
 

@@ -1,11 +1,11 @@
 import clsx from 'clsx'
 import {
   getOutcomeProbability,
-  getOutcomeProbabilityAfterBet,
   getProbability,
   getTopAnswer,
   getTopNSortedAnswers,
   getContractBetMetrics,
+  getProbabilityAfterBet,
 } from 'common/calculate'
 import { getExpectedValue } from 'common/calculate-dpm'
 import { User } from 'common/user'
@@ -77,37 +77,23 @@ export function SignedOutQuickBet(props: {
   const { contract, className } = props
   const [upHover, setUpHover] = useState(false)
   const [downHover, setDownHover] = useState(false)
-  let previewProb = undefined
-  try {
-    previewProb = upHover
-      ? getOutcomeProbabilityAfterBet(
-          contract,
-          quickOutcome(contract, 'UP') || '',
-          BET_SIZE
-        )
-      : downHover
-      ? 1 -
-        getOutcomeProbabilityAfterBet(
-          contract,
-          quickOutcome(contract, 'DOWN') || '',
-          BET_SIZE
-        )
+  const previewProb =
+    upHover || downHover
+      ? getProbabilityAfterBet(contract, downHover ? 'NO' : 'YES', BET_SIZE)
       : undefined
-  } catch (e) {
-    // Catch any errors from hovering on an invalid option
-  }
+
   return (
     <div className="relative">
       <Row className={clsx(className, 'absolute inset-0')}>
         <BinaryQuickBetButton
-          onClick={withTracking(firebaseLogin, 'landing page button click')}
+          onClick={withTracking(firebaseLogin, 'quick bet click')}
           direction="DOWN"
           hover={downHover}
           onMouseEnter={() => setDownHover(true)}
           onMouseLeave={() => setDownHover(false)}
         />
         <BinaryQuickBetButton
-          onClick={withTracking(firebaseLogin, 'landing page button click')}
+          onClick={withTracking(firebaseLogin, 'quick bet click')}
           direction="UP"
           hover={upHover}
           onMouseEnter={() => setUpHover(true)}
@@ -127,25 +113,11 @@ function SignedInQuickBet(props: {
   const { contract, user, className } = props
   const [upHover, setUpHover] = useState(false)
   const [downHover, setDownHover] = useState(false)
-  let previewProb = undefined
-  try {
-    previewProb = upHover
-      ? getOutcomeProbabilityAfterBet(
-          contract,
-          quickOutcome(contract, 'UP') || '',
-          BET_SIZE
-        )
-      : downHover
-      ? 1 -
-        getOutcomeProbabilityAfterBet(
-          contract,
-          quickOutcome(contract, 'DOWN') || '',
-          BET_SIZE
-        )
-      : undefined
-  } catch (e) {
-    // Catch any errors from hovering on an invalid option
-  }
+  let previewProb =
+    upHover || downHover
+      ? getProbabilityAfterBet(contract, downHover ? 'NO' : 'YES', BET_SIZE)
+      : getProbability(contract)
+
   const userBets = useUserContractBets(user.id, contract.id) || []
 
   const { mechanism } = contract
@@ -171,7 +143,7 @@ function SignedInQuickBet(props: {
         })
       }
 
-      const outcome = quickOutcome(contract, direction)
+      const outcome = direction === 'DOWN' ? 'NO' : 'YES'
       return await placeBet({
         amount: BET_SIZE,
         outcome,
@@ -199,9 +171,9 @@ function SignedInQuickBet(props: {
   const { invested } = getContractBetMetrics(contract, userBets)
   const { hasYesShares, hasNoShares } = useSaveBinaryShares(contract, userBets)
   const hasYesInvestment =
-    hasYesShares === true && invested != undefined && floor(invested) > 0
+    hasYesShares && invested != undefined && floor(invested) > 0
   const hasNoInvestment =
-    hasNoShares === true && invested != undefined && floor(invested) > 0
+    hasNoShares && invested != undefined && floor(invested) > 0
 
   if (isCpmm && ((upHover && hasNoShares) || (downHover && hasYesShares))) {
     const oppositeShares = upHover ? noShares : yesShares
@@ -342,25 +314,6 @@ function BinaryQuickBetButton(props: {
       )}
     </Row>
   )
-}
-
-function quickOutcome(contract: Contract, direction: 'UP' | 'DOWN') {
-  const { outcomeType } = contract
-
-  if (outcomeType === 'BINARY' || outcomeType === 'PSEUDO_NUMERIC') {
-    return direction === 'UP' ? 'YES' : 'NO'
-  }
-  if (outcomeType === 'FREE_RESPONSE') {
-    // TODO: Implement shorting of free response answers
-    if (direction === 'DOWN') {
-      throw new Error("Can't bet against free response answers")
-    }
-    return getTopAnswer(contract)?.id
-  }
-  if (outcomeType === 'NUMERIC') {
-    // TODO: Ideally an 'UP' bet would be a uniform bet between [current, max]
-    throw new Error("Can't quick bet on numeric markets")
-  }
 }
 
 export function QuickOutcomeView(props: {
