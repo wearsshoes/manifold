@@ -190,15 +190,6 @@ const updateUserBalance = (
   })
 }
 
-export const payUser = (userId: string, payout: number, isDeposit = false) => {
-  if (!isFinite(payout)) throw new Error('Payout is not finite: ' + payout)
-
-  const firestore = admin.firestore()
-  return firestore.runTransaction(async (transaction) => {
-    updateUserBalance(transaction, userId, payout, isDeposit ? payout : 0)
-  })
-}
-
 const checkAndMergePayouts = (
   payouts: {
     userId: string

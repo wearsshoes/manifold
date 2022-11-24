@@ -95,10 +95,10 @@ async function payOutContractAgain() {
 
   const flattened = flatten(toPayOutAgain.map((d) => d.toBePaidOut))
 
-  for (const [userId, payout] of flattened) {
-    console.log('Paying out', userId, payout)
-    // await payUser(userId, payout)
-  }
+  console.log('Paying out', flattened)
+  await firestore.runTransaction(async (_trans) => {
+    // payUsers(trans, flattened.map(([userId, payout]) => ({ userId, payout })))
+  })
 }
 
 if (require.main === module) payOutContractAgain().then(() => process.exit())

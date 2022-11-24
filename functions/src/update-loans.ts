@@ -1,7 +1,13 @@
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
 import { groupBy, keyBy, sortBy } from 'lodash'
-import { getValues, invokeFunction, log, payUser, writeAsync } from './utils'
+import {
+  getValues,
+  invokeFunction,
+  log,
+  payUsersMultipleTransactions,
+  writeAsync,
+} from './utils'
 import { Bet } from '../../common/bet'
 import { Contract } from '../../common/contract'
 import { PortfolioMetrics, User } from '../../common/user'
@@ -108,8 +114,11 @@ async function updateLoansCore() {
 
   log(`${userUpdates.length} user payouts`)
 
-  await Promise.all(
-    userUpdates.map(({ user, result: { payout } }) => payUser(user.id, payout))
+  await payUsersMultipleTransactions(
+    userUpdates.map(({ user, result: { payout } }) => ({
+      userId: user.id,
+      payout,
+    }))
   )
 
   const today = new Date().toDateString().replace(' ', '-')
